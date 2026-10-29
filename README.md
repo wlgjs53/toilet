@@ -60,6 +60,7 @@ npm run dev              # http://localhost:5173
 
 ```bash
 blender -b --python tools/render_map.py
-```n
+```
+
 - DEM 파일 경로는 환경변수 `DEM_PATH`(기본 `C:\vibe\day4\dem\N33E126.hgt.gz`)로 바꿀 수 있어요.
 - 기울기·높이 과장·빛 방향은 스크립트 맨 위 상수에서 고치고, 다시 실행하면 이미지와 json 이 같이 갱신돼요.
