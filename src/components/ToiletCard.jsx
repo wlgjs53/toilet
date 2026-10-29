@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { formatDistance, navLinks, walkMinutes } from '../lib/geo.js';
+import NearbyPanel from './NearbyPanel.jsx';
 
 const STATE_LABEL = { open: '지금 이용 가능', closed: '지금은 닫혔을 수 있어요', unknown: '시간 확인 필요' };
 
-export default function ToiletCard({ t, rank, featured, selected, onSelect }) {
+export default function ToiletCard({ t, rank, featured, selected, onSelect, nearby, onNearby }) {
   const [open, setOpen] = useState(false);
   const links = navLinks(t);
   const tags = [
@@ -12,6 +13,7 @@ export default function ToiletCard({ t, rank, featured, selected, onSelect }) {
     t.diaper && '👶 기저귀 교환대',
     t.accessible && '♿ 장애인용',
   ].filter(Boolean);
+  const nearbyOpen = nearby && nearby.id === t.id;
 
   return (
     <article
@@ -32,7 +34,7 @@ export default function ToiletCard({ t, rank, featured, selected, onSelect }) {
 
       <div className="dist-row">
         <span className="dist">{formatDistance(t.dist)}</span>
-        <span className="walk">도보 약 {walkMinutes(t.dist)}분</span>
+        <span className="walk">🚶 도보 약 {walkMinutes(t.dist)}분</span>
         <span className={`badge ${t.status.state}`}>{STATE_LABEL[t.status.state]}</span>
       </div>
       <p className="hours">🕒 {t.status.label}</p>
@@ -57,7 +59,26 @@ export default function ToiletCard({ t, rank, featured, selected, onSelect }) {
         </a>
       </div>
 
-      <button className="more" onClick={() => setOpen(!open)} aria-expanded={open}>
+      <button
+        className={`nearby-btn ${nearbyOpen ? 'on' : ''}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          onNearby(nearbyOpen ? null : t);
+        }}
+      >
+        {nearbyOpen ? '주변 둘러보기 닫기 ▲' : '🏘️ 주변 상가·건물 보기'}
+      </button>
+
+      {nearbyOpen && <NearbyPanel toilet={t} state={nearby} />}
+
+      <button
+        className="more"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(!open);
+        }}
+        aria-expanded={open}
+      >
         {open ? '접기 ▲' : '자세히 ▼'}
       </button>
 

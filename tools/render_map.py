@@ -27,7 +27,7 @@ EXAG = 3.0            # 높이 과장 배율 (3D 느낌을 살림)
 STRIDE = 2            # DEM 60m 간격
 PX_KM = 0.03 * STRIDE
 TILT = 45.0           # 카메라 기울기(0=수직 위에서, 클수록 비스듬)
-W = 2400              # 이미지 가로(px)
+W = 4800              # 이미지 가로(px) - 크게 확대해도 선명하도록
 
 # ---------------------------------------------------------------- DEM ----
 with gzip.open(DEM_PATH, 'rb') as f:
@@ -177,11 +177,11 @@ scene.camera = cam
 
 scene.render.resolution_x, scene.render.resolution_y = W, H
 scene.render.resolution_percentage = 100
-scene.eevee.taa_render_samples = 64
+scene.eevee.taa_render_samples = 48
 scene.eevee.use_shadows = True
 img = scene.render.image_settings
 img.file_format = 'JPEG'
-img.quality = 90
+img.quality = 86
 scene.render.filepath = os.path.join(OUT_DIR, 'jeju-3d.jpg')
 bpy.ops.render.render(write_still=True)
 print('rendered', W, 'x', H)

@@ -5,6 +5,8 @@ import { openStatus } from './lib/hours.js';
 import Filters from './components/Filters.jsx';
 import ToiletCard from './components/ToiletCard.jsx';
 import JejuMap from './components/JejuMap.jsx';
+import Mascot from './components/Mascot.jsx';
+import { fetchNearby } from './lib/nearby.js';
 
 const DEFAULT_FILTERS = { openNow: true, bell: false, cctv: false, diaper: false, accessible: false };
 
@@ -17,6 +19,7 @@ export default function App() {
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [showAll, setShowAll] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
+  const [nearby, setNearby] = useState(null); // { id, loading, error, items, source }
 
   useEffect(() => {
     fetch('/map/jeju-3d.json')
@@ -44,6 +47,7 @@ export default function App() {
   const locate = () => {
     setShowAll(false);
     setSelectedId(null);
+    setNearby(null);
     if (!navigator.geolocation) {
       setPhase('denied');
       return;
@@ -92,6 +96,22 @@ export default function App() {
     setTimeout(() => document.getElementById(`card-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
   };
 
+  // 화장실 주변 가게·건물 불러오기 (null 이면 닫기)
+  const openNearby = async (t) => {
+    if (!t) {
+      setNearby(null);
+      return;
+    }
+    setSelectedId(t.id);
+    setNearby({ id: t.id, loading: true });
+    try {
+      const data = await fetchNearby(t.lat, t.lng);
+      setNearby({ id: t.id, loading: false, items: data.items, source: data.source });
+    } catch (e) {
+      setNearby({ id: t.id, loading: false, error: e.message });
+    }
+  };
+
   const sosButton = (
     <button className="sos" onClick={locate} disabled={loading || !!error || phase === 'locating'}>
       {phase === 'locating' ? '📍 위치 찾는 중…' : '🚨 지금 급해요!'}
@@ -102,7 +122,10 @@ export default function App() {
   return (
     <div className="app">
       <header className="top">
-        <h1>🚽 토일렛이슈</h1>
+        <div className="brand">
+          <Mascot size={52} />
+          <h1>토일렛이슈</h1>
+        </div>
         <p>급할 땐 가장 가까운 제주 공공화장실로!</p>
       </header>
 
@@ -177,6 +200,8 @@ export default function App() {
                   featured={i === 0}
                   selected={selectedId === t.id}
                   onSelect={() => setSelectedId(t.id)}
+                  nearby={nearby}
+                  onNearby={openNearby}
                 />
               ))
             )}
