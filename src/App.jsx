@@ -1,18 +1,29 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useToilets } from './lib/useToilets.js';
 import { distanceM } from './lib/geo.js';
 import { openStatus } from './lib/hours.js';
 import Filters from './components/Filters.jsx';
 import ToiletCard from './components/ToiletCard.jsx';
+import JejuMap from './components/JejuMap.jsx';
 
 const DEFAULT_FILTERS = { openNow: true, bell: false, cctv: false, diaper: false, accessible: false };
 
 export default function App() {
   const { items, loading, error } = useToilets();
+  const [meta, setMeta] = useState(null); // 3D 지도 이미지 정보
+  const [metaFailed, setMetaFailed] = useState(false);
   const [phase, setPhase] = useState('idle'); // idle | locating | ready | denied
   const [pos, setPos] = useState(null); // { lat, lng, source: 'gps' | 'region', label? }
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [showAll, setShowAll] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+
+  useEffect(() => {
+    fetch('/map/jeju-3d.json')
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then(setMeta)
+      .catch(() => setMetaFailed(true));
+  }, []);
 
   // 지역별 중심 좌표(위치를 못 가져왔을 때 직접 고르는 용도)
   const regions = useMemo(() => {
@@ -32,6 +43,7 @@ export default function App() {
 
   const locate = () => {
     setShowAll(false);
+    setSelectedId(null);
     if (!navigator.geolocation) {
       setPhase('denied');
       return;
@@ -51,6 +63,7 @@ export default function App() {
     const r = regions.find((x) => x.name === name);
     if (!r) return;
     setPos({ lat: r.lat, lng: r.lng, source: 'region', label: r.name });
+    setSelectedId(null);
     setPhase('ready');
   };
 
@@ -67,8 +80,24 @@ export default function App() {
       .sort((a, b) => a.dist - b.dist);
   }, [items, pos, filters]);
 
-  const visible = showAll ? results.slice(0, 20) : results.slice(0, 3);
+  const visibleCount = showAll ? 20 : 3;
+  const visible = results.slice(0, visibleCount);
   const farAway = results[0] && results[0].dist > 30000; // 제주 밖에서 접속한 경우
+
+  // 지도 핀을 누르면 해당 카드로 이동
+  const selectFromMap = (id) => {
+    setSelectedId(id);
+    const rank = results.findIndex((r) => r.id === id);
+    if (rank >= 3) setShowAll(true);
+    setTimeout(() => document.getElementById(`card-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+  };
+
+  const sosButton = (
+    <button className="sos" onClick={locate} disabled={loading || !!error || phase === 'locating'}>
+      {phase === 'locating' ? '📍 위치 찾는 중…' : '🚨 지금 급해요!'}
+    </button>
+  );
+  const mapReady = meta && items.length > 0;
 
   return (
     <div className="app">
@@ -78,11 +107,23 @@ export default function App() {
       </header>
 
       <main>
+        {mapReady ? (
+          <JejuMap
+            meta={meta}
+            toilets={items}
+            results={phase === 'ready' ? results.slice(0, visibleCount) : []}
+            me={phase === 'ready' ? pos : null}
+            selectedId={selectedId}
+            onSelect={selectFromMap}
+            overlay={phase !== 'ready' ? sosButton : null}
+          />
+        ) : (
+          !metaFailed && <div className="map-skeleton">🗺️ 제주 지도를 불러오는 중…</div>
+        )}
+
         {phase !== 'ready' && (
           <section className="hero">
-            <button className="sos" onClick={locate} disabled={loading || !!error || phase === 'locating'}>
-              {phase === 'locating' ? '📍 위치 찾는 중…' : '🚨 지금 급해요!'}
-            </button>
+            {(metaFailed || !mapReady) && sosButton}
             <p className="hint">누르면 내 위치에서 가장 가까운 화장실 3곳을 바로 보여드려요.</p>
             <p className="privacy">내 위치는 이 기기에서만 사용하고 저장하지 않아요.</p>
 
@@ -128,7 +169,16 @@ export default function App() {
             {results.length === 0 ? (
               <p className="notice">조건에 맞는 화장실이 없어요. 필터를 해제해 보세요.</p>
             ) : (
-              visible.map((t, i) => <ToiletCard key={t.id} t={t} rank={i + 1} featured={i === 0} />)
+              visible.map((t, i) => (
+                <ToiletCard
+                  key={t.id}
+                  t={t}
+                  rank={i + 1}
+                  featured={i === 0}
+                  selected={selectedId === t.id}
+                  onSelect={() => setSelectedId(t.id)}
+                />
+              ))
             )}
 
             {results.length > 3 && (
@@ -143,7 +193,7 @@ export default function App() {
       <footer className="foot">
         <p>
           데이터: 제주특별자치도 공공화장실 정보(공공데이터포털). 개방 시간과 시설은 실제와 다를 수 있어요. 청결도와 실시간
-          상태는 제공되지 않아요.
+          상태는 제공되지 않아요. 지도는 SRTM 지형 데이터로 만든 3D 일러스트이며 길찾기는 지도앱 버튼을 이용하세요.
         </p>
       </footer>
     </div>

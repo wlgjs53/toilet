@@ -341,3 +341,183 @@ select {
   color: var(--muted);
   text-align: center;
 }
+
+/* ===== 3D 지도 ===== */
+.map-wrap {
+  margin: 6px -16px 0;
+}
+.map {
+  position: relative;
+  height: clamp(300px, 70vw, 460px);
+  overflow: hidden;
+  background: #3b86ad;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  border-radius: 0 0 20px 20px;
+  box-shadow: var(--shadow);
+}
+.map:active {
+  cursor: grabbing;
+}
+.map-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.map-layer img {
+  display: block;
+  pointer-events: none;
+}
+.dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 0 1px rgba(20, 60, 80, 0.55);
+  transform: scale(var(--inv));
+  pointer-events: none;
+}
+.route {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+.route line {
+  stroke: #fff;
+  stroke-width: 3px;
+  stroke-dasharray: 6 5;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.6));
+}
+.pin {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  margin: -30px 0 0 0;
+  padding: 0;
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  background: var(--text);
+  color: #fff;
+  font: inherit;
+  font-weight: 900;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+  transform-origin: 0 100%;
+  transform: rotate(-45deg) scale(var(--inv));
+  cursor: pointer;
+}
+.pin span {
+  display: block;
+  transform: rotate(45deg);
+  line-height: 24px;
+  font-size: 0.85rem;
+}
+.pin.first {
+  width: 38px;
+  height: 38px;
+  margin-top: -38px;
+  background: var(--red);
+}
+.pin.first span {
+  line-height: 32px;
+  font-size: 1rem;
+}
+.pin.sel {
+  background: var(--sea);
+  outline: 3px solid var(--yellow);
+}
+.me {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.me i {
+  position: absolute;
+  left: -9px;
+  top: -9px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #2f7bff;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 0 rgba(47, 123, 255, 0.6);
+  transform: scale(var(--inv));
+  animation: ping 1.8s ease-out infinite;
+}
+@keyframes ping {
+  to {
+    box-shadow: 0 0 0 22px rgba(47, 123, 255, 0);
+  }
+}
+.map-ctrl {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  display: grid;
+  gap: 6px;
+}
+.map-ctrl button {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+.map-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 18px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.map-overlay > * {
+  pointer-events: auto;
+}
+.map-skeleton {
+  height: 260px;
+  display: grid;
+  place-items: center;
+  background: #cfe6f0;
+  color: var(--muted);
+  font-weight: 700;
+  border-radius: 0 0 20px 20px;
+  margin: 6px -16px 0;
+}
+
+/* 지도 위/아래에서 쓰는 급해요 버튼 (가로로 긴 알약 모양) */
+.sos {
+  width: auto;
+  aspect-ratio: auto;
+  border-radius: 999px;
+  padding: 18px 34px;
+  font-size: clamp(1.3rem, 6vw, 1.7rem);
+  box-shadow: 0 6px 0 #b8341a, 0 12px 24px rgba(217, 65, 31, 0.45);
+}
+.sos:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #b8341a, 0 6px 12px rgba(217, 65, 31, 0.4);
+}
+.hero {
+  padding-top: 18px;
+}
+.card.selected {
+  border-color: var(--sea);
+  box-shadow: 0 8px 24px rgba(31, 165, 168, 0.35);
+}
+.card.featured.selected {
+  border-color: var(--red);
+}

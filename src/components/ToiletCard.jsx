@@ -3,7 +3,7 @@ import { formatDistance, navLinks, walkMinutes } from '../lib/geo.js';
 
 const STATE_LABEL = { open: '지금 이용 가능', closed: '지금은 닫혔을 수 있어요', unknown: '시간 확인 필요' };
 
-export default function ToiletCard({ t, rank, featured }) {
+export default function ToiletCard({ t, rank, featured, selected, onSelect }) {
   const [open, setOpen] = useState(false);
   const links = navLinks(t);
   const tags = [
@@ -14,7 +14,11 @@ export default function ToiletCard({ t, rank, featured }) {
   ].filter(Boolean);
 
   return (
-    <article className={`card ${featured ? 'featured' : ''} state-${t.status.state}`}>
+    <article
+      id={`card-${t.id}`}
+      onClick={onSelect}
+      className={`card ${featured ? 'featured' : ''} ${selected ? 'selected' : ''} state-${t.status.state}`}
+    >
       <div className="card-top">
         <span className="rank">{rank}</span>
         <div className="card-title">

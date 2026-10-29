@@ -17,6 +17,10 @@ api/toilets.js        Vercel 서버리스 함수: 공공데이터 호출 + 가�
 src/lib/geo.js        거리(하버사인)·도보 시간·지도앱 길안내 링크
 src/lib/hours.js      개방 시간 문장 해석
 src/App.jsx           위치 찾기 / 결과 / 필터
+src/components/JejuMap.jsx  3D 지도(드래그·핀치·휠 확대) + 핀
+src/lib/mapProject.js  경위도+표고 -> 지도 이미지 픽셀 좌표
+tools/render_map.py   블렌더로 제주 3D 지도 이미지 만들기
+public/map/            jeju-3d.jpg(지도) + jeju-3d.json(좌표 계산 값)
 ```
 
 ## 환경변수
@@ -49,3 +53,13 @@ npm run dev              # http://localhost:5173
 
 - 사용자 제보(잠김/깨끗함/휴지 없음) — Supabase 로그인 + 테이블
 - 지도 보기, 홈 화면에 추가(PWA)
+
+## 3D 지도 다시 만들기 (선택)
+
+지도는 SRTM 지형 데이터(DEM)를 블렌더로 렌더링한 이미지예요. 직교(원근 없음) 카메라를 고정 기울기로 써서, 화장실 핀을 수식으로 정확히 올릴 수 있어요. 구름은 없어요.
+
+```bash
+blender -b --python tools/render_map.py
+```n
+- DEM 파일 경로는 환경변수 `DEM_PATH`(기본 `C:\vibe\day4\dem\N33E126.hgt.gz`)로 바꿀 수 있어요.
+- 기울기·높이 과장·빛 방향은 스크립트 맨 위 상수에서 고치고, 다시 실행하면 이미지와 json 이 같이 갱신돼요.
